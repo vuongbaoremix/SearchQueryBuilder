@@ -1,0 +1,1266 @@
+/* ============================================================
+   SearchQueryBuilder — CSS Module (Light + Dark themes)
+   Token-based editor with inline editing support
+   ============================================================ */
+
+/* ---- Theme Variables ---- */
+.root {
+  --sqb-font: 'Inter', system-ui, -apple-system, sans-serif;
+  --sqb-radius-sm: 6px;
+  --sqb-radius-md: 10px;
+  --sqb-radius-lg: 12px;
+  --sqb-transition: 0.2s ease;
+  --sqb-group-color-1: hsl(340, 70%, 60%);
+  --sqb-group-color-2: hsl(200, 70%, 55%);
+  --sqb-group-color-3: hsl(120, 50%, 50%);
+}
+
+/* ---- Dark Theme ---- */
+.root[data-theme='dark'] {
+  --sqb-bg: hsl(230, 20%, 12%);
+  --sqb-surface: hsl(230, 20%, 16%);
+  --sqb-surface-elevated: hsl(230, 18%, 20%);
+  --sqb-border: hsl(230, 15%, 25%);
+  --sqb-border-focus: hsl(230, 80%, 60%);
+  --sqb-text: hsl(230, 10%, 92%);
+  --sqb-text-secondary: hsl(230, 10%, 60%);
+  --sqb-text-muted: hsl(230, 10%, 40%);
+  --sqb-primary: hsl(230, 80%, 60%);
+  --sqb-primary-glow: hsla(230, 80%, 60%, 0.25);
+  --sqb-tag-bg: hsl(230, 35%, 22%);
+  --sqb-tag-border: hsl(230, 30%, 32%);
+  --sqb-tag-hover: hsl(230, 35%, 28%);
+  --sqb-key-color: hsl(180, 70%, 65%);
+  --sqb-value-color: hsl(40, 80%, 70%);
+  --sqb-operator-color: hsl(280, 60%, 72%);
+  --sqb-logical-bg: hsl(260, 40%, 28%);
+  --sqb-logical-color: hsl(260, 60%, 78%);
+  --sqb-pending-bg: hsla(230, 60%, 40%, 0.2);
+  --sqb-pending-border: hsl(230, 60%, 45%);
+  --sqb-error: hsl(0, 70%, 60%);
+  --sqb-error-bg: hsla(0, 70%, 60%, 0.12);
+  --sqb-popover-bg: hsl(230, 22%, 17%);
+  --sqb-popover-hover: hsl(230, 20%, 22%);
+  --sqb-popover-active: hsl(230, 40%, 28%);
+  --sqb-popover-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+  --sqb-preview-bg: hsl(230, 22%, 14%);
+  --sqb-preview-header-bg: hsl(230, 20%, 18%);
+  --sqb-code-color: hsl(180, 50%, 70%);
+  --sqb-scrollbar-track: hsl(230, 20%, 14%);
+  --sqb-scrollbar-thumb: hsl(230, 15%, 28%);
+}
+
+/* ---- Light Theme ---- */
+.root[data-theme='light'] {
+  --sqb-bg: hsl(220, 20%, 97%);
+  --sqb-surface: #ffffff;
+  --sqb-surface-elevated: hsl(220, 15%, 95%);
+  --sqb-border: hsl(220, 15%, 85%);
+  --sqb-border-focus: hsl(230, 80%, 55%);
+  --sqb-text: hsl(230, 20%, 15%);
+  --sqb-text-secondary: hsl(230, 10%, 45%);
+  --sqb-text-muted: hsl(230, 10%, 65%);
+  --sqb-primary: hsl(230, 80%, 55%);
+  --sqb-primary-glow: hsla(230, 80%, 55%, 0.18);
+  --sqb-tag-bg: hsl(230, 45%, 94%);
+  --sqb-tag-border: hsl(230, 35%, 86%);
+  --sqb-tag-hover: hsl(230, 40%, 90%);
+  --sqb-key-color: hsl(180, 55%, 32%);
+  --sqb-value-color: hsl(30, 65%, 38%);
+  --sqb-operator-color: hsl(280, 50%, 48%);
+  --sqb-logical-bg: hsl(260, 40%, 92%);
+  --sqb-logical-color: hsl(260, 50%, 45%);
+  --sqb-pending-bg: hsla(230, 60%, 55%, 0.08);
+  --sqb-pending-border: hsl(230, 60%, 70%);
+  --sqb-error: hsl(0, 70%, 50%);
+  --sqb-error-bg: hsla(0, 70%, 50%, 0.08);
+  --sqb-popover-bg: #ffffff;
+  --sqb-popover-hover: hsl(230, 20%, 96%);
+  --sqb-popover-active: hsl(230, 50%, 94%);
+  --sqb-popover-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+  --sqb-preview-bg: hsl(220, 15%, 96%);
+  --sqb-preview-header-bg: hsl(220, 15%, 93%);
+  --sqb-code-color: hsl(230, 40%, 30%);
+  --sqb-scrollbar-track: hsl(220, 15%, 94%);
+  --sqb-scrollbar-thumb: hsl(220, 10%, 78%);
+}
+
+/* ---- Root ---- */
+.root {
+  font-family: var(--sqb-font);
+  width: 100%;
+  position: relative;
+}
+
+/* ============================================================
+   Input Wrapper & Container
+   ============================================================ */
+
+.inputWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.inputContainer {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: var(--sqb-surface);
+  border: 1.5px solid var(--sqb-border);
+  border-radius: var(--sqb-radius-md);
+  padding: 8px 12px;
+  transition: border-color var(--sqb-transition), box-shadow var(--sqb-transition);
+  min-height: 46px;
+  cursor: text;
+}
+
+.inputContainer:focus-within {
+  border-color: var(--sqb-border-focus);
+  box-shadow: 0 0 0 3px var(--sqb-primary-glow);
+}
+
+.searchIcon {
+  flex-shrink: 0;
+  color: var(--sqb-text-muted);
+  display: flex;
+  align-items: center;
+  padding-top: 3px;
+}
+
+/* ---- Tokens area: tokens + inline input flow together ---- */
+.tokensArea {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+  min-height: 28px;
+}
+
+/* ---- Inline input (sits among the tokens) ---- */
+.inlineInput {
+  flex: 1;
+  min-width: 80px;
+  max-width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--sqb-font);
+  font-size: 13.5px;
+  color: var(--sqb-text);
+  padding: 3px 0;
+  line-height: 1.5;
+}
+
+.inlineInput::placeholder {
+  color: var(--sqb-text-muted);
+  font-style: italic;
+  font-size: 13px;
+}
+
+.clearBtn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--sqb-text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  margin-top: 2px;
+  transition: color var(--sqb-transition), background var(--sqb-transition);
+}
+
+.previewToggleBtn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--sqb-text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  margin-top: 2px;
+  transition: color var(--sqb-transition), background var(--sqb-transition);
+}
+
+.previewToggleBtn:hover {
+  color: var(--sqb-text);
+  background: var(--sqb-surface-elevated);
+}
+
+.previewToggleBtnActive {
+  color: var(--sqb-primary);
+  background: var(--sqb-primary-glow);
+}
+
+.previewToggleBtnActive:hover {
+  color: var(--sqb-primary);
+  background: var(--sqb-primary-glow);
+  filter: brightness(1.1);
+}
+
+.clearBtn:hover {
+  color: var(--sqb-text);
+  background: var(--sqb-surface-elevated);
+}
+
+/* ============================================================
+   Tag / Chip — Represents a completed condition
+   ============================================================ */
+
+.tagWrapper {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  background: var(--sqb-tag-bg);
+  border: 1px solid var(--sqb-tag-border);
+  border-radius: var(--sqb-radius-sm);
+  padding: 2px 4px 2px 8px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+  animation: tagAppear 0.15s ease-out;
+  transition: background var(--sqb-transition), border-color var(--sqb-transition), box-shadow var(--sqb-transition);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.addParenBtn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--sqb-bg);
+  border: 1px solid var(--sqb-border);
+  color: var(--sqb-text);
+  font-size: 11px;
+  font-weight: bold;
+  border-radius: 4px;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  z-index: 10;
+  transition: opacity var(--sqb-transition), background var(--sqb-transition), border-color var(--sqb-transition), transform 0.1s;
+}
+
+.tagWrapper:hover .addParenBtn {
+  opacity: 1;
+}
+
+.addParenBtn:hover {
+  background: var(--sqb-primary-glow);
+  border-color: var(--sqb-primary);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.addParenLeft {
+  left: -8px;
+}
+
+.addParenRight {
+  right: -8px;
+}
+
+.tag:hover {
+  background: var(--sqb-tag-hover);
+  border-color: var(--sqb-text-muted);
+}
+
+.tagEditing .tag {
+  border-color: var(--sqb-primary);
+  box-shadow: 0 0 0 2px var(--sqb-primary-glow);
+}
+
+.tagError {
+  border-color: var(--sqb-error);
+  background: var(--sqb-error-bg);
+}
+
+.tagKey {
+  color: var(--sqb-key-color);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 1px 2px;
+  border-radius: 3px;
+  transition: background var(--sqb-transition);
+}
+
+.tagKey:hover {
+  background: hsla(180, 60%, 50%, 0.12);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+}
+
+.tagOperator {
+  color: var(--sqb-operator-color);
+  font-weight: 700;
+  padding: 1px 4px;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: background var(--sqb-transition);
+}
+
+.tagOperator:hover {
+  background: hsla(280, 60%, 50%, 0.12);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+}
+
+.tagValue {
+  color: var(--sqb-value-color);
+  cursor: pointer;
+  padding: 1px 2px;
+  border-radius: 3px;
+  transition: background var(--sqb-transition);
+}
+
+.tagValue:hover {
+  background: hsla(40, 60%, 50%, 0.12);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+}
+
+.tagRemove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--sqb-text-muted);
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  padding: 0 2px 0 3px;
+  border-radius: 3px;
+  transition: color var(--sqb-transition), background var(--sqb-transition);
+  font-weight: 400;
+}
+
+.tagRemove:hover {
+  color: var(--sqb-error);
+  background: var(--sqb-error-bg);
+}
+
+/* ---- Inline edit input inside tag ---- */
+.tagEditInput {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--sqb-font);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 1px 2px;
+  margin: 0;
+  line-height: 1.5;
+  color: var(--sqb-text);
+  border-bottom: 1.5px solid var(--sqb-primary);
+  border-radius: 0;
+  min-width: 30px;
+}
+
+/* ---- Pending tag (condition being built) ---- */
+.pendingTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  background: var(--sqb-pending-bg);
+  border: 1px dashed var(--sqb-pending-border);
+  border-radius: var(--sqb-radius-sm);
+  padding: 2px 6px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+  animation: tagAppear 0.12s ease-out;
+}
+
+.pendingCursor {
+  color: var(--sqb-primary);
+  animation: blink 1s step-end infinite;
+  font-weight: 300;
+  margin-left: 1px;
+}
+
+/* ---- Logical Operator Badge ---- */
+.logicalOp {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--sqb-logical-bg);
+  color: var(--sqb-logical-color);
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  line-height: 1.5;
+  cursor: default;
+  position: relative;
+}
+
+.logicalOp:hover {
+  filter: brightness(1.1);
+}
+
+/* ---- Group Brackets (with remove button) ---- */
+.groupBracket {
+  display: inline-flex;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 800;
+  padding: 0 2px;
+  transition: color var(--sqb-transition);
+  position: relative;
+  gap: 0;
+  border-radius: 4px;
+  cursor: default;
+}
+
+.groupBracket:hover {
+  background: hsla(230, 60%, 50%, 0.1);
+}
+
+/* ---- Small remove button for logical/paren tokens ---- */
+.tokenRemoveSmall {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--sqb-text-muted);
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1;
+  padding: 0 1px;
+  border-radius: 2px;
+  transition: color var(--sqb-transition);
+  margin-left: 2px;
+  font-weight: 400;
+}
+
+.groupBracket:hover .tokenRemoveSmall,
+.logicalOp:hover .tokenRemoveSmall {
+  display: inline-flex;
+}
+
+.tokenRemoveSmall:hover {
+  color: var(--sqb-error);
+}
+
+/* ============================================================
+   Autocomplete Popover
+   ============================================================ */
+
+.popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--sqb-popover-bg);
+  border: 1px solid var(--sqb-border);
+  border-radius: var(--sqb-radius-lg);
+  box-shadow: var(--sqb-popover-shadow);
+  max-height: 280px;
+  overflow-y: auto;
+  animation: popoverAppear 0.18s ease-out;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sqb-scrollbar-thumb) var(--sqb-scrollbar-track);
+}
+
+.popover::-webkit-scrollbar {
+  width: 6px;
+}
+
+.popover::-webkit-scrollbar-track {
+  background: var(--sqb-scrollbar-track);
+  border-radius: 3px;
+}
+
+.popover::-webkit-scrollbar-thumb {
+  background: var(--sqb-scrollbar-thumb);
+  border-radius: 3px;
+}
+
+.popoverHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px 4px;
+  border-bottom: 1px solid var(--sqb-border);
+  margin-bottom: 2px;
+}
+
+.popoverPhase {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--sqb-text-muted);
+}
+
+.popoverSpinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--sqb-border);
+  border-top-color: var(--sqb-primary);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+.popoverItem {
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.1s ease;
+  border-radius: 6px;
+  margin: 2px 4px;
+}
+
+.popoverItem:hover,
+.popoverItemActive {
+  background: var(--sqb-popover-active);
+}
+
+.popoverItemMain {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.popoverItemLabel {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--sqb-text);
+}
+
+.popoverItemValue {
+  font-size: 11.5px;
+  color: var(--sqb-text-muted);
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+}
+
+.popoverItemDesc {
+  font-size: 11.5px;
+  color: var(--sqb-text-secondary);
+  margin-top: 2px;
+}
+
+.popoverLoading {
+  padding: 16px 12px;
+  text-align: center;
+  color: var(--sqb-text-muted);
+  font-size: 12.5px;
+}
+
+/* ============================================================
+   DSL Preview Panel
+   ============================================================ */
+
+.preview {
+  margin-top: 12px;
+  border: 1px solid var(--sqb-border);
+  border-radius: var(--sqb-radius-lg);
+  overflow: hidden;
+  background: var(--sqb-preview-bg);
+  animation: previewAppear 0.25s ease-out;
+}
+
+.previewTabs {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: var(--sqb-preview-header-bg);
+  border-bottom: 1px solid var(--sqb-border);
+  overflow-x: auto;
+  padding: 0 4px;
+}
+
+.previewTab {
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--sqb-font);
+  color: var(--sqb-text-secondary);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color var(--sqb-transition), border-color var(--sqb-transition);
+}
+
+.previewTab:hover {
+  color: var(--sqb-text);
+}
+
+.previewTabActive {
+  color: var(--sqb-primary);
+  border-bottom-color: var(--sqb-primary);
+}
+
+.previewCopyBtn {
+  margin-left: auto;
+  padding: 5px 10px;
+  font-size: 11.5px;
+  font-family: var(--sqb-font);
+  font-weight: 500;
+  color: var(--sqb-text-secondary);
+  background: transparent;
+  border: 1px solid var(--sqb-border);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all var(--sqb-transition);
+  white-space: nowrap;
+  margin-right: 4px;
+}
+
+.previewCopyBtn:hover {
+  color: var(--sqb-text);
+  background: var(--sqb-surface-elevated);
+}
+
+.previewContent {
+  padding: 12px 16px;
+  max-height: 320px;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sqb-scrollbar-thumb) var(--sqb-scrollbar-track);
+}
+
+.previewCode {
+  margin: 0;
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--sqb-code-color);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.previewErrors {
+  border-top: 1px solid var(--sqb-border);
+  padding: 8px 12px;
+  background: var(--sqb-error-bg);
+}
+
+.previewError {
+  font-size: 12px;
+  color: var(--sqb-error);
+  padding: 2px 0;
+}
+
+.previewErrorToken {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-weight: 600;
+}
+
+/* ============================================================
+   Animations
+   ============================================================ */
+
+@keyframes tagAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes popoverAppear {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes previewAppear {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* ============================================================
+   DatePicker — Custom calendar component
+   ============================================================ */
+
+.datePicker {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex: 1;
+  min-width: 140px;
+}
+
+.dateInputRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+
+.dateInput {
+  flex: 1;
+  min-width: 100px;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--sqb-font);
+  font-size: 13.5px;
+  color: var(--sqb-text);
+  padding: 3px 0;
+  line-height: 1.5;
+}
+
+.dateInput::placeholder {
+  color: var(--sqb-text-muted);
+  font-style: italic;
+  font-size: 13px;
+}
+
+.dateCalendarBtn {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid var(--sqb-border);
+  color: var(--sqb-text-muted);
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--sqb-transition);
+}
+
+.dateCalendarBtn:hover {
+  color: var(--sqb-primary);
+  border-color: var(--sqb-primary);
+  background: var(--sqb-primary-glow);
+}
+
+/* ---- Calendar Popover ---- */
+
+.calendarPopover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 200;
+  background: var(--sqb-popover-bg);
+  border: 1px solid var(--sqb-border);
+  border-radius: var(--sqb-radius-lg);
+  box-shadow: var(--sqb-popover-shadow);
+  padding: 0;
+  min-width: 280px;
+  animation: calendarAppear 0.2s ease-out;
+  user-select: none;
+  overflow: hidden;
+}
+
+/* ---- Tabs ---- */
+
+.dateTabs {
+  display: flex;
+  border-bottom: 1px solid var(--sqb-border);
+  background: var(--sqb-bg);
+}
+
+.dateTab {
+  flex: 1;
+  background: none;
+  border: none;
+  padding: 10px 0;
+  font-family: var(--sqb-font);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sqb-text-secondary);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.dateTab:hover {
+  color: var(--sqb-text);
+  background: var(--sqb-surface-hover);
+}
+
+.dateTabActive {
+  color: var(--sqb-primary);
+  border-bottom-color: var(--sqb-primary);
+}
+
+.dateTabContent {
+  padding: 12px;
+}
+
+/* ---- Quick Select Presets ---- */
+
+.presetsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 320px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.presetCategory {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.presetCategoryTitle {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--sqb-text-muted);
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.presetGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+
+.presetBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--sqb-bg);
+  border: 1px solid var(--sqb-border);
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+
+.presetBtn:hover {
+  background: var(--sqb-surface-elevated);
+  border-color: var(--sqb-primary);
+  transform: translateY(-1px);
+}
+
+.presetIcon {
+  font-size: 16px;
+}
+
+.presetLabel {
+  font-family: var(--sqb-font);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--sqb-text);
+}
+
+.presetDesc {
+  font-size: 11px;
+  color: var(--sqb-text-muted);
+  display: block;
+}
+
+@keyframes calendarAppear {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ---- Calendar Header (nav) ---- */
+
+.calendarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  gap: 2px;
+}
+
+.calendarTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--sqb-text);
+  flex: 1;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.calendarNavBtn {
+  background: none;
+  border: none;
+  color: var(--sqb-text-secondary);
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 700;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+
+.calendarNavBtn:hover {
+  background: var(--sqb-surface-elevated);
+  color: var(--sqb-primary);
+}
+
+/* ---- Day Names Row ---- */
+
+.calendarDayNames {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 4px;
+}
+
+.calendarDayName {
+  text-align: center;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--sqb-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 4px 0;
+}
+
+/* ---- Calendar Grid ---- */
+
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.calendarDayEmpty {
+  aspect-ratio: 1;
+}
+
+.calendarDay {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--sqb-text);
+  font-family: var(--sqb-font);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.12s ease;
+  position: relative;
+}
+
+.calendarDay:hover {
+  background: var(--sqb-surface-elevated);
+  color: var(--sqb-primary);
+  transform: scale(1.08);
+}
+
+.calendarDayToday {
+  color: var(--sqb-primary);
+  font-weight: 700;
+}
+
+.calendarDayToday::after {
+  content: '';
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--sqb-primary);
+}
+
+.calendarDaySelected {
+  background: var(--sqb-primary) !important;
+  color: #fff !important;
+  font-weight: 700;
+  box-shadow: 0 2px 8px hsla(230, 80%, 60%, 0.35);
+}
+
+.calendarDaySelected::after {
+  display: none;
+}
+
+.calendarDaySelected:hover {
+  transform: scale(1.1);
+  box-shadow: 0 3px 12px hsla(230, 80%, 60%, 0.45);
+}
+
+/* ---- Calendar Footer ---- */
+
+.calendarFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--sqb-border);
+}
+
+.calendarTodayBtn {
+  background: none;
+  border: 1px solid var(--sqb-border);
+  color: var(--sqb-text-secondary);
+  font-family: var(--sqb-font);
+  font-size: 11.5px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all var(--sqb-transition);
+}
+
+.calendarTodayBtn:hover {
+  color: var(--sqb-primary);
+  border-color: var(--sqb-primary);
+  background: var(--sqb-primary-glow);
+}
+
+.calendarSelected {
+  font-size: 11.5px;
+  color: var(--sqb-text-secondary);
+  font-weight: 500;
+}
+
+/* ---- Date Tag Edit Input (inside tags) ---- */
+
+.dateTagEdit {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ============================================================
+   Mode Selector
+   ============================================================ */
+
+.modeSelector {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  align-self: center;
+  border-right: 1px solid var(--sqb-border);
+  padding-right: 10px;
+  margin-right: 2px;
+}
+
+.modeSelectorBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  color: var(--sqb-text);
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: var(--sqb-radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: background var(--sqb-transition), color var(--sqb-transition);
+}
+
+.modeSelectorBtn:hover {
+  background: var(--sqb-surface-elevated);
+}
+
+.modeSelectorIcon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.modeSelectorLabel {
+  font-size: 12.5px;
+}
+
+.modeSelectorChevron {
+  transition: transform 0.2s ease;
+  opacity: 0.6;
+}
+
+.modeSelectorChevronOpen {
+  transform: rotate(180deg);
+}
+
+.modeSelectorDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 160px;
+  background: var(--sqb-surface-elevated);
+  border: 1px solid var(--sqb-border);
+  border-radius: var(--sqb-radius-md);
+  padding: 4px;
+  z-index: 200;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  animation: modeDropdownAppear 0.15s ease-out;
+}
+
+@keyframes modeDropdownAppear {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modeSelectorItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--sqb-text);
+  cursor: pointer;
+  padding: 8px 10px;
+  border-radius: var(--sqb-radius-sm);
+  font-size: 12.5px;
+  font-family: inherit;
+  text-align: left;
+  transition: background var(--sqb-transition);
+}
+
+.modeSelectorItem:hover {
+  background: var(--sqb-popup-hover);
+}
+
+.modeSelectorItemActive {
+  color: var(--sqb-primary);
+  font-weight: 600;
+}
+
+.modeSelectorItemIcon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* ============================================================
+   Basic Search Input
+   ============================================================ */
+
+.basicContainer {
+  align-items: center;
+}
+
+.basicInput {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--sqb-text);
+  font-size: 14px;
+  font-family: inherit;
+  padding: 4px 8px;
+  line-height: 1.5;
+}
+
+.basicInput::placeholder {
+  color: var(--sqb-text-muted);
+}
+
+.basicInput:disabled {
+  opacity: 0.6;
+}
+
+.basicSubmitBtn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: var(--sqb-primary);
+  border: none;
+  border-radius: var(--sqb-radius-sm);
+  color: white;
+  cursor: pointer;
+  transition: opacity var(--sqb-transition), transform var(--sqb-transition);
+}
+
+.basicSubmitBtn:hover:not(:disabled) {
+  opacity: 0.85;
+  transform: scale(1.05);
+}
+
+.basicSubmitBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.basicLoading {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+}
+
+.basicLoadingSpinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--sqb-border);
+  border-top-color: var(--sqb-primary);
+  border-radius: 50%;
+  animation: basicSpin 0.6s linear infinite;
+}
+
+@keyframes basicSpin {
+  to { transform: rotate(360deg); }
+}
