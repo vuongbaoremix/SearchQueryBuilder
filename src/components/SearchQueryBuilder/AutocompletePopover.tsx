@@ -54,27 +54,38 @@ export const AutocompletePopover: React.FC<AutocompletePopoverProps> = ({
         {isLoading && <span className={styles.popoverSpinner} />}
       </div>
 
-      {suggestions.map((suggestion, index) => (
-        <div
-          key={`${suggestion.value}-${index}`}
-          className={`${styles.popoverItem} ${index === selectedIndex ? styles.popoverItemActive : ''}`}
-          onMouseDown={(e) => {
-            e.preventDefault(); // prevent input blur
-            onSelect(suggestion);
-          }}
-          onMouseEnter={() => onHover(index)}
-        >
-          <div className={styles.popoverItemMain}>
-            <span className={styles.popoverItemLabel}>{suggestion.label}</span>
-            {suggestion.value !== suggestion.label && (
-              <span className={styles.popoverItemValue}>{suggestion.value}</span>
-            )}
-          </div>
-          {suggestion.description && (
-            <div className={styles.popoverItemDesc}>{suggestion.description}</div>
-          )}
-        </div>
-      ))}
+      {suggestions.map((suggestion, index) => {
+        const isSearchAction = suggestion.value === '__SEARCH__';
+        const isNextNonSearch = index > 0 && suggestions[index - 1]?.value === '__SEARCH__';
+        
+        return (
+          <React.Fragment key={`${suggestion.value}-${index}`}>
+            {isNextNonSearch && <div className={styles.popoverSeparator} />}
+            <div
+              className={`${styles.popoverItem} ${index === selectedIndex ? styles.popoverItemActive : ''} ${isSearchAction ? styles.popoverSearchItem : ''}`}
+              onMouseDown={(e) => {
+                e.preventDefault(); // prevent input blur
+                onSelect(suggestion);
+              }}
+              onMouseEnter={() => onHover(index)}
+            >
+              <div className={styles.popoverItemMain}>
+                <span className={styles.popoverItemLabel}>{suggestion.label}</span>
+                {isSearchAction ? (
+                  <kbd className={styles.popoverKbd}>↵</kbd>
+                ) : (
+                  suggestion.value !== suggestion.label && (
+                    <span className={styles.popoverItemValue}>{suggestion.value}</span>
+                  )
+                )}
+              </div>
+              {suggestion.description && (
+                <div className={styles.popoverItemDesc}>{suggestion.description}</div>
+              )}
+            </div>
+          </React.Fragment>
+        );
+      })}
 
       {isLoading && suggestions.length === 0 && (
         <div className={styles.popoverLoading}>Loading suggestions…</div>

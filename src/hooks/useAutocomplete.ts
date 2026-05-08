@@ -32,6 +32,8 @@ export interface AutocompleteParams {
   openParenCount?: number;
   /** Keys already present in the current query (for disabledWhenKeysPresent filtering) */
   activeKeys?: string[];
+  /** Whether the current query has valid tokens (for showing Search action in logical phase) */
+  hasValidQuery?: boolean;
 }
 
 export function useAutocomplete(): UseAutocompleteReturn {
@@ -205,11 +207,23 @@ export function useAutocomplete(): UseAutocompleteReturn {
 
     // ---- LOGICAL phase ----
     if (phase === 'logical') {
-      const items: Suggestion[] = LOGICAL_OPERATORS.map((op) => ({
+      const items: Suggestion[] = [];
+
+      // Add Search action at the top when query has valid tokens
+      if (params.hasValidQuery) {
+        items.push({
+          value: '__SEARCH__',
+          label: '🔍 Search',
+          description: 'Execute current query (Enter)',
+        });
+      }
+
+      const logicalItems: Suggestion[] = LOGICAL_OPERATORS.map((op) => ({
         value: op,
         label: op,
         description: op === 'AND' ? 'All conditions must match' : 'Any condition can match',
       }));
+      items.push(...logicalItems);
 
       // Add ')' close group suggestion when there are unclosed parens
       const openCount = params.openParenCount ?? 0;

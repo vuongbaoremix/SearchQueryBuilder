@@ -87,6 +87,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
       keyConfigs,
       openParenCount,
       activeKeys: getActiveKeys(tokens),
+      hasValidQuery: tokens.length > 0,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.inputPhase, state.inputText, state.pendingKey, keyConfigs, openParenCount, tokens, focusTick]);
@@ -105,6 +106,13 @@ export const SearchInput: React.FC<SearchInputProps> = ({
   // ---- Handle suggestion selection ----
   const handleSuggestionSelect = useCallback(
     (suggestion: Suggestion) => {
+      // Handle search action from logical phase
+      if (suggestion.value === '__SEARCH__') {
+        autocomplete.close();
+        onSubmit();
+        return;
+      }
+
       if (suggestion.value === '(') {
         insertParen('open');
         autocomplete.close();
