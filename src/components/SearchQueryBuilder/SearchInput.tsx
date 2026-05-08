@@ -19,6 +19,7 @@ interface SearchInputProps {
   keyConfigs: KeyConfig[];
   placeholder?: string;
   onSubmit: () => void;
+  onClear?: () => void;
   autoOpenSuggestions?: boolean;
   showPreviewToggle?: boolean;
   isPreviewOpen?: boolean;
@@ -40,6 +41,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
   keyConfigs,
   placeholder,
   onSubmit,
+  onClear,
   autoOpenSuggestions = true,
   showPreviewToggle = true,
   isPreviewOpen = false,
@@ -569,7 +571,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
         {(hasTokens || state.inputText) && (
           <button
             className={styles.clearBtn}
-            onClick={clearAll}
+            onClick={() => { clearAll(); onClear?.(); }}
             title="Clear all"
             type="button"
           >

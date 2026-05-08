@@ -201,6 +201,9 @@ export interface SearchQueryBuilderProps {
   /** Callback on search submit */
   onSearch?: (result: QueryResult) => void;
 
+  /** Callback when user clicks the clear (×) button */
+  onClear?: () => void;
+
   /** Theme: light, dark, or auto-detect */
   theme?: 'light' | 'dark' | 'auto';
 

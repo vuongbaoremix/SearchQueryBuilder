@@ -34,6 +34,7 @@ export const SearchQueryBuilder: React.FC<SearchQueryBuilderProps> = ({
   keyConfigs,
   onQueryChange,
   onSearch,
+  onClear,
   theme = 'auto',
   placeholder,
   showPreview = true,
@@ -205,6 +206,7 @@ export const SearchQueryBuilder: React.FC<SearchQueryBuilderProps> = ({
           keyConfigs={keyConfigs}
           placeholder={activeMode?.placeholder || placeholder}
           onSubmit={handleSubmit}
+          onClear={onClear}
           autoOpenSuggestions={autoOpenSuggestions}
           showPreviewToggle={showPreview}
           isPreviewOpen={isPreviewOpen}
