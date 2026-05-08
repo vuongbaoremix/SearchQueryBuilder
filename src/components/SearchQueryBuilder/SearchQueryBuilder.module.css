@@ -109,7 +109,7 @@
   border: 1.5px solid var(--sqb-border);
   border-radius: var(--sqb-radius-md);
   padding: 8px 12px;
-  transition: border-color var(--sqb-transition), box-shadow var(--sqb-transition);
+  transition: border-color var(--sqb-transition), box-shadow var(--sqb-transition), max-height 0.3s ease;
   min-height: 46px;
   cursor: text;
 }
@@ -128,13 +128,40 @@
 }
 
 /* ---- Tokens area: tokens + inline input flow together ---- */
+/* Collapsed by default: single row, no wrapping, overflow hidden. */
+/* Expands on focus to show all tokens with a scrollable max-height. */
 .tokensArea {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 5px;
   flex: 1;
   min-height: 28px;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  max-height: 34px;
+}
+
+/* Expanded state: allow wrapping and scrolling when focused */
+.inputContainer:focus-within .tokensArea {
+  flex-wrap: wrap;
+  max-height: 200px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sqb-scrollbar-thumb) var(--sqb-scrollbar-track);
+}
+
+.inputContainer:focus-within .tokensArea::-webkit-scrollbar {
+  width: 4px;
+}
+
+.inputContainer:focus-within .tokensArea::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.inputContainer:focus-within .tokensArea::-webkit-scrollbar-thumb {
+  background: var(--sqb-scrollbar-thumb);
+  border-radius: 2px;
 }
 
 /* ---- Inline input (sits among the tokens) ---- */
