@@ -3,7 +3,7 @@
 // ============================================================
 
 import React, { useCallback, useEffect, useRef } from 'react';
-import type { KeyConfig, Suggestion, SearchMode } from '../../core/types';
+import type { KeyConfig, Suggestion, SearchMode, HistoryDisplayMode } from '../../core/types';
 import type { EditorToken, InputPhase } from '../../hooks/useQueryBuilder';
 import type { UseQueryBuilderReturn } from '../../hooks/useQueryBuilder';
 import { useAutocomplete } from '../../hooks/useAutocomplete';
@@ -31,6 +31,7 @@ interface SearchInputProps {
   isHistoryOpen?: boolean;
   onToggleHistory?: () => void;
   historyPanel?: React.ReactNode;
+  historyDisplay?: HistoryDisplayMode;
 }
 
 const PHASE_PLACEHOLDERS: Record<InputPhase, string> = {
@@ -57,6 +58,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
   isHistoryOpen = false,
   onToggleHistory,
   historyPanel,
+  historyDisplay = 'popup',
 }) => {
   const {
     state,
@@ -624,7 +626,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
           </button>
         )}
 
-        {hasHistoryProvider && (
+        {hasHistoryProvider && historyDisplay !== 'inline' && (
           <button
             className={`${styles.historyToggleBtn} ${isHistoryOpen ? styles.historyToggleBtnActive : ''}`}
             onClick={onToggleHistory}
@@ -678,8 +680,8 @@ export const SearchInput: React.FC<SearchInputProps> = ({
         onHover={autocomplete.setSelectedIndex}
       />
 
-      {/* History panel (passed from parent) */}
-      {historyPanel}
+      {/* History panel (passed from parent) — popup mode only */}
+      {historyDisplay !== 'inline' && historyPanel}
     </div>
   );
 };

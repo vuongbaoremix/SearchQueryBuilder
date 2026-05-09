@@ -191,6 +191,9 @@ export interface SearchMode {
 // Search History
 // ============================================================
 
+/** How the history panel is displayed */
+export type HistoryDisplayMode = 'popup' | 'inline';
+
 /** A single search history entry */
 export interface SearchHistoryItem {
   id: string;
@@ -295,6 +298,11 @@ export interface SearchQueryBuilderProps {
 
   /** Provider for search history & bookmarks. If not set, history feature is hidden. */
   historyProvider?: SearchHistoryProvider;
+
+  /** How history panel is displayed. Default: 'popup'
+   *  - 'popup': Icon toggle, click to show/hide dropdown panel (current behavior)
+   *  - 'inline': History panel shown inline below search bar alongside suggestions */
+  historyDisplay?: HistoryDisplayMode;
 
   /** Callback when user selects a history item to restore into the search bar */
   onHistorySelect?: (item: SearchHistoryItem) => void;

@@ -2,8 +2,8 @@
 // useSearchHistory — State management for search history panel
 // ============================================================
 
-import { useState, useCallback, useRef } from 'react';
-import type { SearchHistoryProvider, SearchHistoryItem } from '../core/types';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import type { SearchHistoryProvider, SearchHistoryItem, HistoryDisplayMode } from '../core/types';
 
 export type HistoryTab = 'recent' | 'bookmarks';
 
@@ -39,9 +39,11 @@ export interface UseSearchHistoryReturn {
 const PAGE_SIZE = 20;
 
 export function useSearchHistory(
-  provider: SearchHistoryProvider | undefined
+  provider: SearchHistoryProvider | undefined,
+  displayMode: HistoryDisplayMode = 'popup'
 ): UseSearchHistoryReturn {
-  const [isOpen, setIsOpen] = useState(false);
+  const isInline = displayMode === 'inline';
+  const [isOpen, setIsOpen] = useState(isInline);
   const [activeTab, setActiveTabState] = useState<HistoryTab>('recent');
   const [recentItems, setRecentItems] = useState<SearchHistoryItem[]>([]);
   const [bookmarkItems, setBookmarkItems] = useState<SearchHistoryItem[]>([]);
@@ -96,17 +98,40 @@ export function useSearchHistory(
   }, [fetchRecent, fetchBookmarks]);
 
   const close = useCallback(() => {
+    if (isInline) {
+      // Inline mode: don't hide the panel, just reset filter
+      setFilterText('');
+      setEditingBookmarkId(null);
+      return;
+    }
     setIsOpen(false);
     setEditingBookmarkId(null);
-  }, []);
+  }, [isInline]);
 
   const toggle = useCallback(() => {
+    if (isInline) {
+      // Inline mode: always open, just refresh
+      offsetRef.current = 0;
+      fetchRecent(0);
+      fetchBookmarks();
+      return;
+    }
     if (isOpen) {
       close();
     } else {
       open();
     }
-  }, [isOpen, open, close]);
+  }, [isInline, isOpen, open, close, fetchRecent, fetchBookmarks]);
+
+  // Auto-fetch on mount for inline mode
+  const initialFetchDone = useRef(false);
+  useEffect(() => {
+    if (isInline && provider && !initialFetchDone.current) {
+      initialFetchDone.current = true;
+      fetchRecent(0);
+      fetchBookmarks();
+    }
+  }, [isInline, provider, fetchRecent, fetchBookmarks]);
 
   const setActiveTab = useCallback(
     (tab: HistoryTab) => {

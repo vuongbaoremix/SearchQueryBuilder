@@ -3,7 +3,7 @@
 // ============================================================
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import type { SearchMode, QueryResult } from '../../core/types';
+import type { SearchMode, QueryResult, HistoryDisplayMode } from '../../core/types';
 import { ModeSelector } from './ModeSelector';
 import styles from './SearchQueryBuilder.module.css';
 
@@ -25,6 +25,7 @@ interface BasicSearchInputProps {
   isHistoryOpen?: boolean;
   onToggleHistory?: () => void;
   historyPanel?: React.ReactNode;
+  historyDisplay?: HistoryDisplayMode;
 }
 
 function emptyResult(raw: string, inputText?: string): QueryResult {
@@ -57,6 +58,7 @@ export const BasicSearchInput: React.FC<BasicSearchInputProps> = ({
   isHistoryOpen = false,
   onToggleHistory,
   historyPanel,
+  historyDisplay = 'popup',
 }) => {
   const [inputText, setInputText] = useState(defaultInputText || '');
   const [isLoading, setIsLoading] = useState(false);
@@ -175,7 +177,7 @@ export const BasicSearchInput: React.FC<BasicSearchInputProps> = ({
         )}
 
         {/* History toggle */}
-        {hasHistoryProvider && (
+        {hasHistoryProvider && historyDisplay !== 'inline' && (
           <button
             className={`${styles.historyToggleBtn} ${isHistoryOpen ? styles.historyToggleBtnActive : ''}`}
             onClick={onToggleHistory}
@@ -219,8 +221,8 @@ export const BasicSearchInput: React.FC<BasicSearchInputProps> = ({
         </button>
       </div>
 
-      {/* History panel (passed from parent) */}
-      {historyPanel}
+      {/* History panel (passed from parent) — popup mode only */}
+      {historyDisplay !== 'inline' && historyPanel}
     </div>
   );
 };

@@ -3,7 +3,7 @@
 // ============================================================
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import type { SearchHistoryItem } from '../../core/types';
+import type { SearchHistoryItem, HistoryDisplayMode } from '../../core/types';
 import type { HistoryTab } from '../../hooks/useSearchHistory';
 import styles from './SearchQueryBuilder.module.css';
 
@@ -17,6 +17,7 @@ interface SearchHistoryPanelProps {
   editingBookmarkId: string | null;
   recentCount: number;
   bookmarkCount: number;
+  displayMode?: HistoryDisplayMode;
 
   onClose: () => void;
   onTabChange: (tab: HistoryTab) => void;
@@ -60,6 +61,7 @@ export const SearchHistoryPanel: React.FC<SearchHistoryPanelProps> = ({
   editingBookmarkId,
   recentCount,
   bookmarkCount,
+  displayMode = 'popup',
   onClose,
   onTabChange,
   onFilterChange,
@@ -75,16 +77,18 @@ export const SearchHistoryPanel: React.FC<SearchHistoryPanelProps> = ({
   const panelRef = useRef<HTMLDivElement>(null);
   const filterInputRef = useRef<HTMLInputElement>(null);
 
-  // Focus filter input when panel opens
+  const isInline = displayMode === 'inline';
+
+  // Focus filter input when panel opens (popup mode only)
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !isInline) {
       requestAnimationFrame(() => filterInputRef.current?.focus());
     }
-  }, [isOpen]);
+  }, [isOpen, isInline]);
 
-  // Close on outside click
+  // Close on outside click (popup mode only)
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || isInline) return;
     const handler = (e: MouseEvent) => {
       if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
         onClose();
@@ -92,12 +96,14 @@ export const SearchHistoryPanel: React.FC<SearchHistoryPanelProps> = ({
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
-  }, [isOpen, onClose]);
+  }, [isOpen, isInline, onClose]);
 
   if (!isOpen) return null;
 
+  const panelClassName = isInline ? styles.historyPanelInline : styles.historyPanel;
+
   return (
-    <div className={styles.historyPanel} ref={panelRef}>
+    <div className={panelClassName} ref={panelRef}>
       {/* ---- Tabs ---- */}
       <div className={styles.historyTabs}>
         <button

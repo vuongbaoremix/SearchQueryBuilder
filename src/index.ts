@@ -27,6 +27,7 @@ export type {
   SearchQueryBuilderProps,
   SearchHistoryItem,
   SearchHistoryProvider,
+  HistoryDisplayMode,
 } from './core/types';
 
 // Hooks
