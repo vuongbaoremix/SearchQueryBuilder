@@ -81,15 +81,17 @@ export const SearchQueryBuilder: React.FC<SearchQueryBuilderProps> = ({
   const internalBasicTextRef = useRef(defaultInputText || '');
   const internalModeRef = useRef(activeMode?.key);
 
-  // ---- Controlled: query (advanced mode) ----
+  // ---- Controlled: query (advanced mode only) ----
   useEffect(() => {
     if (controlledQuery === undefined) return;
+    // Skip when in basic mode — BasicSearchInput manages its own state
+    if (activeMode?.type === 'basic') return;
     // Only sync if this is an external change (not caused by internal typing)
     if (controlledQuery !== internalRawQueryRef.current) {
       internalRawQueryRef.current = controlledQuery;
       builder.loadQuery(controlledQuery);
     }
-  }, [controlledQuery, builder]);
+  }, [controlledQuery, builder, activeMode]);
 
   // ---- Controlled: searchMode ----
   useEffect(() => {
@@ -140,15 +142,17 @@ export const SearchQueryBuilder: React.FC<SearchQueryBuilderProps> = ({
   );
 
   // Notify parent when query changes (use ref to prevent infinite loop)
+  // Only fires in advanced mode — basic mode uses handleBasicQueryChange instead.
   const prevRawQueryRef = useRef(rawQuery);
   useEffect(() => {
+    if (activeMode?.type === 'basic') return;
     if (prevRawQueryRef.current !== rawQuery) {
       prevRawQueryRef.current = rawQuery;
       // Update internal ref so controlled prop sync won't re-trigger
       internalRawQueryRef.current = rawQuery;
       onQueryChange?.(enrichResult(queryResult));
     }
-  }, [rawQuery, queryResult, onQueryChange, enrichResult]);
+  }, [rawQuery, queryResult, onQueryChange, enrichResult, activeMode]);
 
   const handleSubmit = useCallback(() => {
     onSearch?.(enrichResult(queryResult));
