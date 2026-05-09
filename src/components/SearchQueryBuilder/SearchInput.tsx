@@ -74,6 +74,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
   const wrapperRef = useRef<HTMLDivElement>(null);
   const editInputRef = useRef<HTMLInputElement>(null);
   const isFocusedRef = useRef(false);
+  const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [focusTick, setFocusTick] = React.useState(0);
 
   const isEditing = !!state.editingTokenId;
@@ -104,7 +105,6 @@ export const SearchInput: React.FC<SearchInputProps> = ({
       });
     }
   }, [isEditing, state.editingTokenId, state.editingField]);
-
   // ---- Handle suggestion selection ----
   const handleSuggestionSelect = useCallback(
     (suggestion: Suggestion) => {
@@ -126,6 +126,29 @@ export const SearchInput: React.FC<SearchInputProps> = ({
         return;
       }
 
+      // ── Priority: editing an existing tag field ──
+      // Use editingField (not inputPhase) to determine what we're editing,
+      // since editingField is always correct whereas inputPhase in the
+      // closure may be stale.
+      if (state.editingTokenId && state.editingField) {
+        switch (state.editingField) {
+          case 'key': {
+            const config = keyConfigs.find((k) => k.key === suggestion.value);
+            selectKey(suggestion.value, config);
+            break;
+          }
+          case 'operator':
+            selectOperator(suggestion.value as any);
+            break;
+          case 'value':
+            selectValue(suggestion.value);
+            break;
+        }
+        autocomplete.close();
+        return;
+      }
+
+      // ── Normal flow (not editing) ──
       switch (state.inputPhase) {
         case 'key': {
           const config = keyConfigs.find((k) => k.key === suggestion.value);
@@ -144,7 +167,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
       }
       autocomplete.close();
     },
-    [state.inputPhase, keyConfigs, selectKey, selectOperator, selectValue, selectLogical, insertParen, autocomplete]
+    [state.inputPhase, state.editingTokenId, state.editingField, keyConfigs, selectKey, selectOperator, selectValue, selectLogical, insertParen, autocomplete, onSubmit]
   );
 
   // ---- Shared keyboard handler (used by both main input and edit input) ----
@@ -240,17 +263,30 @@ export const SearchInput: React.FC<SearchInputProps> = ({
 
   const handleFocus = useCallback(() => {
     isFocusedRef.current = true;
-    if (!isEditing && autoOpenSuggestions) {
-      // Bump focusTick to trigger the useEffect sync
+    // Cancel any pending blur-close so it doesn't kill the autocomplete
+    // that we're about to (re-)open. This is critical for the
+    // main-input-blur → edit-input-focus transition.
+    if (blurTimeoutRef.current) {
+      clearTimeout(blurTimeoutRef.current);
+      blurTimeoutRef.current = null;
+    }
+    if (autoOpenSuggestions) {
+      // Bump focusTick to trigger the autocomplete sync useEffect.
+      // This must fire for BOTH normal input and inline edit inputs.
       setFocusTick((t) => t + 1);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEditing, autoOpenSuggestions]);
+  }, [autoOpenSuggestions]);
 
   const handleBlur = useCallback(() => {
     isFocusedRef.current = false;
-    // Only close if not clicking inside the popover or tags
-    setTimeout(() => autocomplete.close(), 200);
+    // Delay close so clicks on popover items or tag parts can fire first.
+    // The timeout is tracked so handleFocus can cancel it if focus moves
+    // to another input within the same component (e.g. edit input).
+    blurTimeoutRef.current = setTimeout(() => {
+      blurTimeoutRef.current = null;
+      autocomplete.close();
+    }, 200);
   }, [autocomplete]);
 
   const handleWrapperClick = useCallback(
@@ -263,6 +299,15 @@ export const SearchInput: React.FC<SearchInputProps> = ({
       }
     },
     [inputRef, isEditing, cancelEdit]
+  );
+
+  // ---- Enter edit mode: close stale autocomplete first ----
+  const handleEditToken = useCallback(
+    (tokenId: string, field: 'key' | 'operator' | 'value') => {
+      autocomplete.close();
+      editToken(tokenId, field);
+    },
+    [autocomplete, editToken]
   );
 
   // ---- Render a single tag ----
@@ -305,6 +350,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
             value={state.inputText}
             onChange={handleChange}
             onKeyDown={handleSharedKeyDown}
+            onFocus={handleFocus}
             onBlur={handleBlur}
             autoComplete="off"
             spellCheck={false}
@@ -314,7 +360,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
         ) : (
           <span
             className={styles.tagKey}
-            onClick={(e) => { e.stopPropagation(); editToken(token.id, 'key'); }}
+            onClick={(e) => { e.stopPropagation(); handleEditToken(token.id, 'key'); }}
             title="Click to edit field"
           >
             {token.key}
@@ -330,6 +376,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
             value={state.inputText}
             onChange={handleChange}
             onKeyDown={handleSharedKeyDown}
+            onFocus={handleFocus}
             onBlur={handleBlur}
             autoComplete="off"
             spellCheck={false}
@@ -339,7 +386,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
         ) : (
           <span 
             className={styles.tagOperator}
-            onClick={(e) => { e.stopPropagation(); editToken(token.id, 'operator'); }}
+            onClick={(e) => { e.stopPropagation(); handleEditToken(token.id, 'operator'); }}
             title="Click to edit operator"
           >
             {token.operator}
@@ -373,6 +420,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
               value={state.inputText}
               onChange={handleChange}
               onKeyDown={handleSharedKeyDown}
+              onFocus={handleFocus}
               onBlur={handleBlur}
               autoComplete="off"
               spellCheck={false}
@@ -383,7 +431,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
         ) : (
           <span
             className={styles.tagValue}
-            onClick={(e) => { e.stopPropagation(); editToken(token.id, 'value'); }}
+            onClick={(e) => { e.stopPropagation(); handleEditToken(token.id, 'value'); }}
             title="Click to edit value"
           >
             {token.value ? (isDateType ? formatRelativeDateDisplay(token.value) : token.value) : '…'}

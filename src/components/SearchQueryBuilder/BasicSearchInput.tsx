@@ -13,6 +13,7 @@ interface BasicSearchInputProps {
   onModeChange: (mode: SearchMode) => void;
   onSearch: (result: QueryResult) => void;
   onQueryChange?: (result: QueryResult) => void;
+  onClear?: () => void;
   placeholder?: string;
   defaultInputText?: string;
   /** Controlled input text. Changes from parent will sync into the input. */
@@ -41,6 +42,7 @@ export const BasicSearchInput: React.FC<BasicSearchInputProps> = ({
   onModeChange,
   onSearch,
   onQueryChange,
+  onClear,
   placeholder,
   defaultInputText,
   controlledInputText,
@@ -114,8 +116,9 @@ export const BasicSearchInput: React.FC<BasicSearchInputProps> = ({
     internalTextRef.current = '';
     setInputText('');
     onQueryChange?.(emptyResult('', ''));
+    onClear?.();
     inputRef.current?.focus();
-  }, [onQueryChange]);
+  }, [onQueryChange, onClear]);
 
   return (
     <div className={styles.inputWrapper}>

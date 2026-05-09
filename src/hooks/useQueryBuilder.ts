@@ -166,6 +166,9 @@ export function useQueryBuilder(keyConfigs: KeyConfig[]): UseQueryBuilderReturn 
             editingField: null,
             inputText: '',
             inputPhase: needsLogical(newTokens) ? 'logical' : 'key',
+            pendingKey: null,
+            pendingKeyConfig: null,
+            pendingOperator: null,
           };
         }
 
@@ -202,6 +205,9 @@ export function useQueryBuilder(keyConfigs: KeyConfig[]): UseQueryBuilderReturn 
           editingField: null,
           inputText: '',
           inputPhase: needsLogical(newTokens) ? 'logical' : 'key',
+          pendingKey: null,
+          pendingKeyConfig: null,
+          pendingOperator: null,
         };
       }
 
@@ -232,6 +238,9 @@ export function useQueryBuilder(keyConfigs: KeyConfig[]): UseQueryBuilderReturn 
           editingField: null,
           inputText: '',
           inputPhase: 'logical' as InputPhase,
+          pendingKey: null,
+          pendingKeyConfig: null,
+          pendingOperator: null,
         };
       }
 
@@ -325,6 +334,81 @@ export function useQueryBuilder(keyConfigs: KeyConfig[]): UseQueryBuilderReturn 
       const text = s.inputText.trim();
       if (!text) return s;
 
+      // ── Priority: handle inline editing of existing tokens ──
+      // When editing a tag field, Enter should update the existing token,
+      // never create a new one.
+      if (s.editingTokenId) {
+        if (s.editingField === 'key') {
+          const config = keyMap().get(text.toLowerCase());
+          const resolvedKey = config ? config.key : text;
+          const newTokens = s.tokens.map((t) => {
+            if (t.id === s.editingTokenId && t.type === 'condition') {
+              return { ...t, key: resolvedKey, keyConfig: config };
+            }
+            return t;
+          });
+          return {
+            ...s,
+            tokens: newTokens,
+            editingTokenId: null,
+            editingField: null,
+            inputText: '',
+            inputPhase: needsLogical(newTokens) ? 'logical' : 'key',
+            pendingKey: null,
+            pendingKeyConfig: null,
+            pendingOperator: null,
+          };
+        }
+
+        if (s.editingField === 'operator') {
+          const validOps = ['=', '!=', '>', '>=', '<', '<=', ':', 'IN'];
+          const opText = text.toUpperCase();
+          if (validOps.includes(opText) || validOps.includes(text)) {
+            const op = (validOps.includes(opText) ? opText : text) as Operator;
+            const newTokens = s.tokens.map((t) => {
+              if (t.id === s.editingTokenId && t.type === 'condition') {
+                return { ...t, operator: op };
+              }
+              return t;
+            });
+            return {
+              ...s,
+              tokens: newTokens,
+              editingTokenId: null,
+              editingField: null,
+              inputText: '',
+              inputPhase: needsLogical(newTokens) ? 'logical' : 'key',
+              pendingKey: null,
+              pendingKeyConfig: null,
+              pendingOperator: null,
+            };
+          }
+          return s; // Invalid operator — ignore
+        }
+
+        if (s.editingField === 'value') {
+          const newTokens = s.tokens.map((t) => {
+            if (t.id === s.editingTokenId && t.type === 'condition') {
+              return { ...t, value: text };
+            }
+            return t;
+          });
+          return {
+            ...s,
+            tokens: newTokens,
+            editingTokenId: null,
+            editingField: null,
+            inputText: '',
+            inputPhase: needsLogical(newTokens) ? 'logical' : 'key',
+            pendingKey: null,
+            pendingKeyConfig: null,
+            pendingOperator: null,
+          };
+        }
+      }
+
+      // ── Normal flow (no editing) ──
+
       // If in key phase, try to match a key
       if (s.inputPhase === 'key') {
         const config = keyMap().get(text.toLowerCase());
@@ -349,24 +433,6 @@ export function useQueryBuilder(keyConfigs: KeyConfig[]): UseQueryBuilderReturn 
 
       // If in value phase, complete the condition
       if (s.inputPhase === 'value' && s.pendingKey && s.pendingOperator) {
-        // Handle editing existing token
-        if (s.editingTokenId && s.editingField === 'value') {
-          const newTokens = s.tokens.map((t) => {
-            if (t.id === s.editingTokenId && t.type === 'condition') {
-              return { ...t, value: text };
-            }
-            return t;
-          });
-          return {
-            ...s,
-            tokens: newTokens,
-            editingTokenId: null,
-            editingField: null,
-            inputText: '',
-            inputPhase: 'logical' as InputPhase,
-          };
-        }
-
         const newToken: ConditionToken = {
           id: nextId(),
           type: 'condition',

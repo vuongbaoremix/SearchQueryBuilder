@@ -193,6 +193,7 @@ export const SearchQueryBuilder: React.FC<SearchQueryBuilderProps> = ({
           onModeChange={handleModeChange}
           onSearch={handleBasicSearch}
           onQueryChange={handleBasicQueryChange}
+          onClear={onClear}
           placeholder={placeholder}
           defaultInputText={defaultInputText}
           controlledInputText={controlledInputText}
