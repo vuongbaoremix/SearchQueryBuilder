@@ -27,6 +27,10 @@ interface SearchInputProps {
   searchModes?: SearchMode[];
   activeMode?: SearchMode;
   onModeChange?: (mode: SearchMode) => void;
+  hasHistoryProvider?: boolean;
+  isHistoryOpen?: boolean;
+  onToggleHistory?: () => void;
+  historyPanel?: React.ReactNode;
 }
 
 const PHASE_PLACEHOLDERS: Record<InputPhase, string> = {
@@ -49,6 +53,10 @@ export const SearchInput: React.FC<SearchInputProps> = ({
   searchModes,
   activeMode,
   onModeChange,
+  hasHistoryProvider = false,
+  isHistoryOpen = false,
+  onToggleHistory,
+  historyPanel,
 }) => {
   const {
     state,
@@ -616,6 +624,20 @@ export const SearchInput: React.FC<SearchInputProps> = ({
           </button>
         )}
 
+        {hasHistoryProvider && (
+          <button
+            className={`${styles.historyToggleBtn} ${isHistoryOpen ? styles.historyToggleBtnActive : ''}`}
+            onClick={onToggleHistory}
+            title={isHistoryOpen ? 'Close history' : 'Search history'}
+            type="button"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+          </button>
+        )}
+
         {(hasTokens || state.inputText) && (
           <button
             className={styles.clearBtn}
@@ -655,6 +677,9 @@ export const SearchInput: React.FC<SearchInputProps> = ({
         onSelect={handleSuggestionSelect}
         onHover={autocomplete.setSelectedIndex}
       />
+
+      {/* History panel (passed from parent) */}
+      {historyPanel}
     </div>
   );
 };

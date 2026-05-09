@@ -1331,3 +1331,395 @@
 @keyframes basicSpin {
   to { transform: rotate(360deg); }
 }
+
+/* ============================================================
+   Search History Panel
+   ============================================================ */
+
+/* ---- Toggle button (in search bar action area) ---- */
+
+.historyToggleBtn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--sqb-text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  margin-top: 2px;
+  transition: color var(--sqb-transition), background var(--sqb-transition);
+}
+
+.historyToggleBtn:hover {
+  color: var(--sqb-text);
+  background: var(--sqb-surface-elevated);
+}
+
+.historyToggleBtnActive {
+  color: var(--sqb-primary);
+  background: var(--sqb-primary-glow);
+}
+
+/* ---- Panel container ---- */
+
+.historyPanel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 110;
+  background: var(--sqb-popover-bg);
+  border: 1px solid var(--sqb-border);
+  border-radius: var(--sqb-radius-lg);
+  box-shadow: var(--sqb-popover-shadow);
+  animation: popoverAppear 0.18s ease-out;
+  display: flex;
+  flex-direction: column;
+  max-height: 480px;
+}
+
+/* ---- Tabs ---- */
+
+.historyTabs {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--sqb-border);
+  padding: 0 4px;
+  gap: 0;
+}
+
+.historyTab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  font-family: var(--sqb-font);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--sqb-text-secondary);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color var(--sqb-transition), border-color var(--sqb-transition);
+  white-space: nowrap;
+}
+
+.historyTab:hover {
+  color: var(--sqb-text);
+}
+
+.historyTabActive {
+  color: var(--sqb-primary);
+  border-bottom-color: var(--sqb-primary);
+}
+
+.historyTabBadge {
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--sqb-surface-elevated);
+  color: var(--sqb-text-secondary);
+  padding: 1px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.historyTabActive .historyTabBadge {
+  background: var(--sqb-primary-glow);
+  color: var(--sqb-primary);
+}
+
+.historyClearAllBtn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--sqb-text-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  transition: color var(--sqb-transition), background var(--sqb-transition);
+}
+
+.historyClearAllBtn:hover {
+  color: var(--sqb-error);
+  background: var(--sqb-error-bg);
+}
+
+/* ---- Filter ---- */
+
+.historyFilter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--sqb-border);
+}
+
+.historyFilterIcon {
+  flex-shrink: 0;
+  color: var(--sqb-text-muted);
+}
+
+.historyFilterInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--sqb-font);
+  font-size: 13px;
+  color: var(--sqb-text);
+  padding: 2px 0;
+}
+
+.historyFilterInput::placeholder {
+  color: var(--sqb-text-muted);
+  font-style: italic;
+}
+
+.historyFilterClear {
+  background: none;
+  border: none;
+  color: var(--sqb-text-muted);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0 4px;
+  border-radius: 3px;
+  transition: color var(--sqb-transition);
+}
+
+.historyFilterClear:hover {
+  color: var(--sqb-text);
+}
+
+/* ---- List ---- */
+
+.historyList {
+  overflow-y: auto;
+  flex: 1;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sqb-scrollbar-thumb) var(--sqb-scrollbar-track);
+}
+
+.historyList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.historyList::-webkit-scrollbar-track {
+  background: var(--sqb-scrollbar-track);
+  border-radius: 3px;
+}
+
+.historyList::-webkit-scrollbar-thumb {
+  background: var(--sqb-scrollbar-thumb);
+  border-radius: 3px;
+}
+
+/* ---- Item ---- */
+
+.historyItem {
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background 0.1s ease;
+  border-bottom: 1px solid hsla(230, 15%, 25%, 0.3);
+}
+
+.historyItem:hover {
+  background: var(--sqb-popover-active);
+}
+
+.historyItem:last-child {
+  border-bottom: none;
+}
+
+.historyItemName {
+  margin-bottom: 4px;
+}
+
+.historyItemNameText {
+  font-size: 13px;
+  font-weight: 600;
+  color: hsl(40, 80%, 70%);
+}
+
+.historyItemQuery {
+  margin-bottom: 6px;
+}
+
+.historyItemQueryText {
+  font-size: 12.5px;
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  color: var(--sqb-text);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+.historyItemMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.historyModeBadge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--sqb-logical-bg);
+  color: var(--sqb-logical-color);
+}
+
+.historyModeBadgeBasic {
+  background: hsla(160, 50%, 40%, 0.2);
+  color: hsl(160, 60%, 65%);
+}
+
+.historyTime {
+  font-size: 11px;
+  color: var(--sqb-text-muted);
+}
+
+.historyItemActions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.historyItem:hover .historyItemActions {
+  opacity: 1;
+}
+
+/* ---- Bookmark button ---- */
+
+.historyBookmarkBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 4px;
+  border-radius: 3px;
+  color: var(--sqb-text-muted);
+  transition: color var(--sqb-transition), transform 0.15s ease;
+}
+
+.historyBookmarkBtn:hover {
+  color: hsl(40, 80%, 70%);
+  transform: scale(1.15);
+}
+
+.historyBookmarkBtnActive {
+  color: hsl(40, 80%, 70%);
+}
+
+/* ---- Rename ---- */
+
+.historyRenameBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--sqb-text-muted);
+  padding: 2px 4px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  transition: color var(--sqb-transition);
+}
+
+.historyRenameBtn:hover {
+  color: var(--sqb-primary);
+}
+
+.historyRenameInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid var(--sqb-primary);
+  outline: none;
+  font-family: var(--sqb-font);
+  font-size: 13px;
+  font-weight: 600;
+  color: hsl(40, 80%, 70%);
+  padding: 1px 2px;
+}
+
+/* ---- Delete button ---- */
+
+.historyDeleteBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--sqb-text-muted);
+  padding: 2px 4px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  transition: color var(--sqb-transition);
+}
+
+.historyDeleteBtn:hover {
+  color: var(--sqb-error);
+}
+
+/* ---- Load more ---- */
+
+.historyLoadMore {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  background: none;
+  border: none;
+  font-family: var(--sqb-font);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--sqb-primary);
+  cursor: pointer;
+  transition: background var(--sqb-transition);
+  border-top: 1px solid var(--sqb-border);
+}
+
+.historyLoadMore:hover {
+  background: var(--sqb-popover-active);
+}
+
+/* ---- Empty ---- */
+
+.historyEmpty {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--sqb-text-muted);
+  font-size: 13px;
+}
+
+/* ---- Loading ---- */
+
+.historyLoading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  color: var(--sqb-text-muted);
+  font-size: 12.5px;
+}
+
+.historyLoadingSpinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--sqb-border);
+  border-top-color: var(--sqb-primary);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}

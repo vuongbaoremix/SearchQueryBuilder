@@ -21,6 +21,10 @@ interface BasicSearchInputProps {
   showPreviewToggle?: boolean;
   isPreviewOpen?: boolean;
   onTogglePreview?: () => void;
+  hasHistoryProvider?: boolean;
+  isHistoryOpen?: boolean;
+  onToggleHistory?: () => void;
+  historyPanel?: React.ReactNode;
 }
 
 function emptyResult(raw: string, inputText?: string): QueryResult {
@@ -49,6 +53,10 @@ export const BasicSearchInput: React.FC<BasicSearchInputProps> = ({
   showPreviewToggle = true,
   isPreviewOpen = false,
   onTogglePreview,
+  hasHistoryProvider = false,
+  isHistoryOpen = false,
+  onToggleHistory,
+  historyPanel,
 }) => {
   const [inputText, setInputText] = useState(defaultInputText || '');
   const [isLoading, setIsLoading] = useState(false);
@@ -166,6 +174,21 @@ export const BasicSearchInput: React.FC<BasicSearchInputProps> = ({
           </button>
         )}
 
+        {/* History toggle */}
+        {hasHistoryProvider && (
+          <button
+            className={`${styles.historyToggleBtn} ${isHistoryOpen ? styles.historyToggleBtnActive : ''}`}
+            onClick={onToggleHistory}
+            title={isHistoryOpen ? 'Close history' : 'Search history'}
+            type="button"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+          </button>
+        )}
+
         {/* Clear */}
         {inputText && (
           <button
@@ -195,6 +218,9 @@ export const BasicSearchInput: React.FC<BasicSearchInputProps> = ({
           </svg>
         </button>
       </div>
+
+      {/* History panel (passed from parent) */}
+      {historyPanel}
     </div>
   );
 };

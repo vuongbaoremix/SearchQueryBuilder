@@ -3,11 +3,13 @@
 // ============================================================
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import type { SearchQueryBuilderProps, SearchMode, QueryResult } from '../../core/types';
+import type { SearchQueryBuilderProps, SearchMode, QueryResult, SearchHistoryItem } from '../../core/types';
 import { useQueryBuilder } from '../../hooks/useQueryBuilder';
 import { useDSL } from '../../hooks/useDSL';
+import { useSearchHistory } from '../../hooks/useSearchHistory';
 import { SearchInput } from './SearchInput';
 import { BasicSearchInput } from './BasicSearchInput';
+import { SearchHistoryPanel } from './SearchHistoryPanel';
 import { DSLPreview } from './DSLPreview';
 import styles from './SearchQueryBuilder.module.css';
 
@@ -48,6 +50,9 @@ export const SearchQueryBuilder: React.FC<SearchQueryBuilderProps> = ({
   query: controlledQuery,
   searchMode: controlledSearchMode,
   inputText: controlledInputText,
+  // History
+  historyProvider,
+  onHistorySelect,
 }) => {
   const systemTheme = useSystemTheme();
   const resolvedTheme = theme === 'auto' ? systemTheme : theme;
@@ -74,6 +79,14 @@ export const SearchQueryBuilder: React.FC<SearchQueryBuilderProps> = ({
 
   // Basic mode result for preview
   const [basicResult, setBasicResult] = useState<QueryResult | null>(null);
+
+  // ---- History ----
+  const history = useSearchHistory(historyProvider);
+
+  // Mutual exclusion: close history when autocomplete opens (handled by input focus)
+  const handleToggleHistory = useCallback(() => {
+    history.toggle();
+  }, [history]);
 
   // ---- Anti-loop refs ----
   // Track last internally-generated values to distinguish external vs internal changes
@@ -155,16 +168,34 @@ export const SearchQueryBuilder: React.FC<SearchQueryBuilderProps> = ({
   }, [rawQuery, queryResult, onQueryChange, enrichResult, activeMode]);
 
   const handleSubmit = useCallback(() => {
-    onSearch?.(enrichResult(queryResult));
-  }, [onSearch, queryResult, enrichResult]);
+    const result = enrichResult(queryResult);
+    onSearch?.(result);
+    // Auto-save to history
+    if (historyProvider && result.raw) {
+      history.addToHistory({
+        raw: result.raw,
+        mode: activeMode?.key || 'advanced',
+        inputText: result.inputText || result.raw,
+      });
+    }
+  }, [onSearch, queryResult, enrichResult, historyProvider, history, activeMode]);
 
   const handleBasicSearch = useCallback(
     (result: QueryResult) => {
       // result.inputText is set by BasicSearchInput; enrich with mode key
       internalBasicTextRef.current = result.inputText || '';
-      onSearch?.(enrichResult(result, result.inputText));
+      const enriched = enrichResult(result, result.inputText);
+      onSearch?.(enriched);
+      // Auto-save to history
+      if (historyProvider && (result.raw || result.inputText)) {
+        history.addToHistory({
+          raw: result.raw || '',
+          mode: activeMode?.key || 'basic',
+          inputText: result.inputText || '',
+        });
+      }
     },
-    [onSearch, enrichResult]
+    [onSearch, enrichResult, historyProvider, history, activeMode]
   );
 
   const handleBasicQueryChange = useCallback(
@@ -177,6 +208,15 @@ export const SearchQueryBuilder: React.FC<SearchQueryBuilderProps> = ({
     [onQueryChange, enrichResult]
   );
 
+  // ---- History item selection ----
+  const handleHistoryItemSelect = useCallback(
+    (item: SearchHistoryItem) => {
+      history.close();
+      onHistorySelect?.(item);
+    },
+    [history, onHistorySelect]
+  );
+
   const hasQuery = builder.tokens.length > 0;
 
   // Determine if we're in basic mode
@@ -184,6 +224,32 @@ export const SearchQueryBuilder: React.FC<SearchQueryBuilderProps> = ({
 
   // Determine preview result
   const previewResult = isBasicMode ? basicResult : queryResult;
+
+  // Build the history panel node so it's rendered inside the input's inputWrapper
+  const historyPanelNode = historyProvider ? (
+    <SearchHistoryPanel
+      isOpen={history.isOpen}
+      activeTab={history.activeTab}
+      filteredItems={history.filteredItems}
+      filterText={history.filterText}
+      isLoading={history.isLoading}
+      hasMore={history.hasMore}
+      editingBookmarkId={history.editingBookmarkId}
+      recentCount={history.recentItems.length}
+      bookmarkCount={history.bookmarkItems.length}
+      onClose={history.close}
+      onTabChange={history.setActiveTab}
+      onFilterChange={history.setFilterText}
+      onSelect={handleHistoryItemSelect}
+      onToggleBookmark={history.toggleBookmark}
+      onStartRename={history.startRenameBookmark}
+      onConfirmRename={history.confirmRenameBookmark}
+      onCancelRename={history.cancelRenameBookmark}
+      onLoadMore={history.loadMore}
+      onClearHistory={history.clearHistory}
+      onDeleteHistory={history.deleteHistory}
+    />
+  ) : null;
 
   return (
     <div
@@ -204,6 +270,10 @@ export const SearchQueryBuilder: React.FC<SearchQueryBuilderProps> = ({
           showPreviewToggle={showPreview}
           isPreviewOpen={isPreviewOpen}
           onTogglePreview={togglePreview}
+          hasHistoryProvider={!!historyProvider}
+          isHistoryOpen={history.isOpen}
+          onToggleHistory={handleToggleHistory}
+          historyPanel={historyPanelNode}
         />
       ) : (
         <SearchInput
@@ -219,6 +289,10 @@ export const SearchQueryBuilder: React.FC<SearchQueryBuilderProps> = ({
           searchModes={searchModes}
           activeMode={activeMode}
           onModeChange={handleModeChange}
+          hasHistoryProvider={!!historyProvider}
+          isHistoryOpen={history.isOpen}
+          onToggleHistory={handleToggleHistory}
+          historyPanel={historyPanelNode}
         />
       )}
 

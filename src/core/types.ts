@@ -188,6 +188,47 @@ export interface SearchMode {
 }
 
 // ============================================================
+// Search History
+// ============================================================
+
+/** A single search history entry */
+export interface SearchHistoryItem {
+  id: string;
+  bookmark: boolean;
+  name: string;
+  createdTime: string;
+  inputText?: string;
+  mode: string;
+  raw?: string;
+  searchVersion: string;
+}
+
+/** Provider interface for search history persistence */
+export interface SearchHistoryProvider {
+  /** Fetch recent search history (paginated) */
+  getSearchHistory(offset?: number, pageSize?: number): Promise<SearchHistoryItem[]>;
+
+  /** Add a new search to history */
+  addSearchHistory(entry: {
+    raw: string;
+    mode: string;
+    inputText: string;
+  }): Promise<void>;
+
+  /** Fetch all bookmarked searches */
+  getSearchHistoryBookmarks(): Promise<SearchHistoryItem[]>;
+
+  /** Toggle bookmark on/off for a history item */
+  toggleBookmark(id: string, name?: string): Promise<void>;
+
+  /** Clear all search history (non-bookmarked items) */
+  clearHistory(): Promise<void>;
+
+  /** Delete a single history item by ID */
+  deleteHistory(id: string): Promise<void>;
+}
+
+// ============================================================
 // Component Props
 // ============================================================
 
@@ -249,4 +290,12 @@ export interface SearchQueryBuilderProps {
 
   /** Controlled: input text (basic mode). Changes are synced into the basic input. */
   inputText?: string;
+
+  // ---- History ----
+
+  /** Provider for search history & bookmarks. If not set, history feature is hidden. */
+  historyProvider?: SearchHistoryProvider;
+
+  /** Callback when user selects a history item to restore into the search bar */
+  onHistorySelect?: (item: SearchHistoryItem) => void;
 }

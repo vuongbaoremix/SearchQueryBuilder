@@ -25,6 +25,8 @@ export type {
   ParseError,
   QueryResult,
   SearchQueryBuilderProps,
+  SearchHistoryItem,
+  SearchHistoryProvider,
 } from './core/types';
 
 // Hooks
@@ -32,3 +34,4 @@ export { useQueryBuilder } from './hooks/useQueryBuilder';
 export type { EditorToken, ConditionToken, LogicalToken, ParenToken, InputPhase, UseQueryBuilderReturn } from './hooks/useQueryBuilder';
 export { useAutocomplete } from './hooks/useAutocomplete';
 export { useDSL } from './hooks/useDSL';
+export { useSearchHistory } from './hooks/useSearchHistory';
