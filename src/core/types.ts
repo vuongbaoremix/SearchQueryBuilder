@@ -232,6 +232,17 @@ export interface SearchHistoryProvider {
 }
 
 // ============================================================
+// Help Items
+// ============================================================
+
+export interface SearchHelpItem {
+  id: string;
+  query: string;
+  description: string;
+  mode?: string;
+}
+
+// ============================================================
 // Component Props
 // ============================================================
 
@@ -306,4 +317,7 @@ export interface SearchQueryBuilderProps {
 
   /** Callback when user selects a history item to restore into the search bar */
   onHistorySelect?: (item: SearchHistoryItem) => void;
+
+  /** Optional list of help/sample queries to display in the Help tab */
+  helpItems?: SearchHelpItem[];
 }

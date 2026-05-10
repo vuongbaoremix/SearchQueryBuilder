@@ -3,9 +3,9 @@
 // ============================================================
 
 import { useState, useCallback, useRef } from 'react';
-import type { SearchHistoryProvider, SearchHistoryItem } from '../core/types';
+import type { SearchHistoryProvider, SearchHistoryItem, SearchHelpItem } from '../core/types';
 
-export type HistoryTab = 'recent' | 'bookmarks';
+export type HistoryTab = 'recent' | 'bookmarks' | 'help';
 
 export interface UseSearchHistoryReturn {
   // State
@@ -39,7 +39,8 @@ export interface UseSearchHistoryReturn {
 const PAGE_SIZE = 20;
 
 export function useSearchHistory(
-  provider: SearchHistoryProvider | undefined
+  provider: SearchHistoryProvider | undefined,
+  helpItems?: SearchHelpItem[]
 ): UseSearchHistoryReturn {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTabState] = useState<HistoryTab>('recent');
@@ -189,7 +190,9 @@ export function useSearchHistory(
   // ---- Computed: filtered items ----
 
   const sourceItems = activeTab === 'recent' ? recentItems : bookmarkItems;
-  const filteredItems = filterText.trim()
+  
+  // Note: For 'help' tab, we don't return filteredItems from here, we will render helpItems directly
+  const filteredItems = filterText.trim() && activeTab !== 'help'
     ? sourceItems.filter((item) => {
         const q = filterText.toLowerCase();
         return (

@@ -54,6 +54,7 @@ export const SearchQueryBuilder: React.FC<SearchQueryBuilderProps> = ({
   historyProvider,
   historyDisplay = 'popup',
   onHistorySelect,
+  helpItems,
 }) => {
   const systemTheme = useSystemTheme();
   const resolvedTheme = theme === 'auto' ? systemTheme : theme;
@@ -82,7 +83,7 @@ export const SearchQueryBuilder: React.FC<SearchQueryBuilderProps> = ({
   const [basicResult, setBasicResult] = useState<QueryResult | null>(null);
 
   // ---- History ----
-  const history = useSearchHistory(historyProvider);
+  const history = useSearchHistory(historyProvider, helpItems);
 
   // Mutual exclusion: close history when autocomplete opens (handled by input focus)
   const handleToggleHistory = useCallback(() => {
@@ -169,6 +170,7 @@ export const SearchQueryBuilder: React.FC<SearchQueryBuilderProps> = ({
   }, [rawQuery, queryResult, onQueryChange, enrichResult, activeMode]);
 
   const handleSubmit = useCallback(() => {
+    history.close();
     const result = enrichResult(queryResult);
     onSearch?.(result);
     // Auto-save to history
@@ -183,6 +185,7 @@ export const SearchQueryBuilder: React.FC<SearchQueryBuilderProps> = ({
 
   const handleBasicSearch = useCallback(
     (result: QueryResult) => {
+      history.close();
       // result.inputText is set by BasicSearchInput; enrich with mode key
       internalBasicTextRef.current = result.inputText || '';
       const enriched = enrichResult(result, result.inputText);
@@ -239,6 +242,7 @@ export const SearchQueryBuilder: React.FC<SearchQueryBuilderProps> = ({
       recentCount={history.recentItems.length}
       bookmarkCount={history.bookmarkItems.length}
       displayMode={historyDisplay}
+      helpItems={helpItems}
       onClose={history.close}
       onTabChange={history.setActiveTab}
       onFilterChange={history.setFilterText}

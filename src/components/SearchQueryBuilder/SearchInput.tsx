@@ -232,6 +232,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
           cancelEdit();
           inputRef.current?.focus();
         } else if (tokens.length > 0) {
+          autocomplete.close();
           onSubmit();
         }
         return;
@@ -669,7 +670,10 @@ export const SearchInput: React.FC<SearchInputProps> = ({
         {/* Submit search */}
         <button
           className={styles.basicSubmitBtn}
-          onClick={onSubmit}
+          onClick={() => {
+            autocomplete.close();
+            onSubmit();
+          }}
           title="Search"
           type="button"
           disabled={!hasTokens}

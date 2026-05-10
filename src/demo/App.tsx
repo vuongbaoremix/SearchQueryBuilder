@@ -7,7 +7,7 @@ import { SearchQueryBuilder } from '../components/SearchQueryBuilder/SearchQuery
 import { sampleKeyConfigs } from './sampleConfig';
 import { realKeyConfigs } from './sampleConfig2';
 import { MockHistoryProvider } from './mockApi';
-import type { QueryResult, SearchMode } from '../core/types';
+import type { QueryResult, SearchMode, SearchHelpItem } from '../core/types';
 import styles from './App.module.css';
 
 // Initialize mock history provider outside component so it persists across renders
@@ -57,6 +57,33 @@ const SEARCH_MODES: SearchMode[] = [
   },
 ];
 
+const MOCK_HELP_ITEMS: SearchHelpItem[] = [
+  {
+    id: 'h1',
+    description: 'Find emails from a specific sender',
+    query: 'from = "boss@company.com"',
+    mode: 'advanced'
+  },
+  {
+    id: 'h2',
+    description: 'Find urgent messages from last week',
+    query: 'priority = "high" AND date >= "last week"',
+    mode: 'advanced'
+  },
+  {
+    id: 'h3',
+    description: 'Search for invoices and receipts',
+    query: 'category IN ("invoice", "receipt")',
+    mode: 'advanced'
+  },
+  {
+    id: 'h4',
+    description: 'Quick search for "project zero"',
+    query: 'project zero',
+    mode: 'basic'
+  }
+];
+
 export const App: React.FC = () => {
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [lastResult, setLastResult] = useState<QueryResult | null>(null);
@@ -102,6 +129,7 @@ export const App: React.FC = () => {
             defaultSearchMode="advanced"
             historyProvider={mockHistoryProvider}
             historyDisplay="inline"
+            helpItems={MOCK_HELP_ITEMS}
             onSearchModeChange={(mode) => console.log('Mode changed:', mode.key)}
           />
         </section>

@@ -3,7 +3,7 @@
 // ============================================================
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import type { SearchHistoryItem, HistoryDisplayMode } from '../../core/types';
+import type { SearchHistoryItem, HistoryDisplayMode, SearchHelpItem } from '../../core/types';
 import type { HistoryTab } from '../../hooks/useSearchHistory';
 import styles from './SearchQueryBuilder.module.css';
 
@@ -17,6 +17,7 @@ interface SearchHistoryPanelProps {
   editingBookmarkId: string | null;
   recentCount: number;
   bookmarkCount: number;
+  helpItems?: SearchHelpItem[];
   displayMode?: HistoryDisplayMode;
 
   onClose: () => void;
@@ -61,6 +62,7 @@ export const SearchHistoryPanel: React.FC<SearchHistoryPanelProps> = ({
   editingBookmarkId,
   recentCount,
   bookmarkCount,
+  helpItems = [],
   displayMode = 'popup',
   onClose,
   onTabChange,
@@ -130,6 +132,23 @@ export const SearchHistoryPanel: React.FC<SearchHistoryPanelProps> = ({
           {bookmarkCount > 0 && <span className={styles.historyTabBadge}>{bookmarkCount}</span>}
         </button>
 
+        {/* Help Tab - only show if helpItems exist */}
+        {helpItems.length > 0 && (
+          <button
+            className={`${styles.historyTab} ${activeTab === 'help' ? styles.historyTabActive : ''}`}
+            onClick={() => onTabChange('help')}
+            type="button"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="16" x2="12" y2="12" />
+              <line x1="12" y1="8" x2="12.01" y2="8" />
+            </svg>
+            <span>Help</span>
+            <span className={styles.historyTabBadge}>{helpItems.length}</span>
+          </button>
+        )}
+
         {/* Clear all (recent tab only) */}
         {activeTab === 'recent' && recentCount > 0 && (
           <button
@@ -146,36 +165,38 @@ export const SearchHistoryPanel: React.FC<SearchHistoryPanelProps> = ({
         )}
       </div>
 
-      {/* ---- Filter input ---- */}
-      <div className={styles.historyFilter}>
-        <svg className={styles.historyFilterIcon} width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="11" cy="11" r="8" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" />
-        </svg>
-        <input
-          ref={filterInputRef}
-          type="text"
-          className={styles.historyFilterInput}
-          value={filterText}
-          onChange={(e) => onFilterChange(e.target.value)}
-          placeholder="Filter history…"
-          autoComplete="off"
-          spellCheck={false}
-        />
-        {filterText && (
-          <button
-            className={styles.historyFilterClear}
-            onClick={() => onFilterChange('')}
-            type="button"
-          >
-            ×
-          </button>
-        )}
-      </div>
+      {/* ---- Filter input (Not shown for Help tab) ---- */}
+      {activeTab !== 'help' && (
+        <div className={styles.historyFilter}>
+          <svg className={styles.historyFilterIcon} width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input
+            ref={filterInputRef}
+            type="text"
+            className={styles.historyFilterInput}
+            value={filterText}
+            onChange={(e) => onFilterChange(e.target.value)}
+            placeholder="Filter history…"
+            autoComplete="off"
+            spellCheck={false}
+          />
+          {filterText && (
+            <button
+              className={styles.historyFilterClear}
+              onClick={() => onFilterChange('')}
+              type="button"
+            >
+              ×
+            </button>
+          )}
+        </div>
+      )}
 
       {/* ---- Item list ---- */}
       <div className={styles.historyList}>
-        {filteredItems.length === 0 && !isLoading && (
+        {filteredItems.length === 0 && !isLoading && activeTab !== 'help' && (
           <div className={styles.historyEmpty}>
             {filterText
               ? 'No matches found'
@@ -185,7 +206,8 @@ export const SearchHistoryPanel: React.FC<SearchHistoryPanelProps> = ({
           </div>
         )}
 
-        {filteredItems.map((item) => (
+        {/* Regular history items */}
+        {activeTab !== 'help' && filteredItems.map((item) => (
           <HistoryItemRow
             key={item.id}
             item={item}
@@ -197,6 +219,27 @@ export const SearchHistoryPanel: React.FC<SearchHistoryPanelProps> = ({
             onConfirmRename={onConfirmRename}
             onCancelRename={onCancelRename}
             onDelete={onDeleteHistory}
+          />
+        ))}
+
+        {/* Help items */}
+        {activeTab === 'help' && helpItems.map((helpItem) => (
+          <HelpItemRow 
+            key={helpItem.id} 
+            item={helpItem} 
+            onSelect={() => {
+              // Convert SearchHelpItem to SearchHistoryItem shape for consistency
+              onSelect({
+                id: helpItem.id,
+                bookmark: false,
+                name: '',
+                createdTime: new Date().toISOString(),
+                inputText: helpItem.query,
+                raw: helpItem.query,
+                mode: helpItem.mode || 'advanced',
+                searchVersion: '1.0'
+              });
+            }} 
           />
         ))}
 
@@ -377,6 +420,41 @@ const HistoryItemRow: React.FC<HistoryItemRowProps> = ({
             </svg>
           </button>
         </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================================
+// HelpItemRow — Single help item
+// ============================================================
+
+interface HelpItemRowProps {
+  item: SearchHelpItem;
+  onSelect: () => void;
+}
+
+const HelpItemRow: React.FC<HelpItemRowProps> = ({ item, onSelect }) => {
+  return (
+    <div
+      className={styles.historyItem}
+      onMouseDown={(e) => {
+        e.preventDefault();
+        onSelect();
+      }}
+    >
+      <div className={styles.historyItemName}>
+        <span className={styles.historyItemNameText} style={{ fontWeight: 600 }}>{item.description}</span>
+      </div>
+
+      <div className={styles.historyItemQuery} style={{ marginTop: '4px' }}>
+        <span className={styles.historyItemQueryText} style={{ opacity: 0.8 }}>{item.query}</span>
+      </div>
+
+      <div className={styles.historyItemMeta}>
+        <span className={`${styles.historyModeBadge} ${item.mode === 'basic' ? styles.historyModeBadgeBasic : ''}`}>
+          {item.mode || 'advanced'}
+        </span>
       </div>
     </div>
   );
