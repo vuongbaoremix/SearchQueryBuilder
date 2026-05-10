@@ -24,6 +24,8 @@ interface BasicSearchInputProps {
   hasHistoryProvider?: boolean;
   isHistoryOpen?: boolean;
   onToggleHistory?: () => void;
+  onOpenHistory?: () => void;
+  onCloseHistory?: () => void;
   historyPanel?: React.ReactNode;
   historyDisplay?: HistoryDisplayMode;
 }
@@ -57,12 +59,15 @@ export const BasicSearchInput: React.FC<BasicSearchInputProps> = ({
   hasHistoryProvider = false,
   isHistoryOpen = false,
   onToggleHistory,
+  onOpenHistory,
+  onCloseHistory,
   historyPanel,
   historyDisplay = 'popup',
 }) => {
   const [inputText, setInputText] = useState(defaultInputText || '');
   const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   // Anti-loop ref: track what we last set internally
   const internalTextRef = useRef(inputText);
@@ -130,8 +135,26 @@ export const BasicSearchInput: React.FC<BasicSearchInputProps> = ({
     inputRef.current?.focus();
   }, [onQueryChange, onClear]);
 
+  const handleFocus = useCallback(() => {
+    if (historyDisplay === 'inline' && onOpenHistory) {
+      onOpenHistory();
+    }
+  }, [historyDisplay, onOpenHistory]);
+
+  const handleBlur = useCallback((e: React.FocusEvent) => {
+    if (e.currentTarget.contains(e.relatedTarget as Node)) {
+      return;
+    }
+
+    setTimeout(() => {
+      if (historyDisplay === 'inline' && onCloseHistory) {
+        onCloseHistory();
+      }
+    }, 200);
+  }, [historyDisplay, onCloseHistory]);
+
   return (
-    <div className={styles.inputWrapper}>
+    <div className={styles.inputWrapper} ref={wrapperRef} onBlur={handleBlur}>
       <div className={`${styles.inputContainer} ${styles.basicContainer}`}>
         {/* Mode selector */}
         <ModeSelector
@@ -148,6 +171,7 @@ export const BasicSearchInput: React.FC<BasicSearchInputProps> = ({
           value={inputText}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
+          onFocus={handleFocus}
           placeholder={resolvedPlaceholder}
           autoComplete="off"
           spellCheck={false}
@@ -220,6 +244,13 @@ export const BasicSearchInput: React.FC<BasicSearchInputProps> = ({
           </svg>
         </button>
       </div>
+
+      {/* Dropdown container for stacking popovers */}
+      {historyDisplay === 'inline' && isHistoryOpen && (
+        <div className={styles.dropdownContainer}>
+          {historyPanel}
+        </div>
+      )}
 
       {/* History panel (passed from parent) — popup mode only */}
       {historyDisplay !== 'inline' && historyPanel}

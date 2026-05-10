@@ -69,3 +69,125 @@ export function createMockSuggestionsProvider(field: string) {
     );
   };
 }
+
+// ============================================================
+// Mock Search History Provider
+// ============================================================
+
+import type { SearchHistoryProvider, SearchHistoryItem } from '../core/types';
+
+export class MockHistoryProvider implements SearchHistoryProvider {
+  private items: SearchHistoryItem[] = [];
+
+  constructor() {
+    // Seed some initial data
+    const now = new Date();
+    this.items = [
+      {
+        id: '1',
+        bookmark: true,
+        name: 'High Severity Errors',
+        createdTime: new Date(now.getTime() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
+        inputText: 'level: "ERROR" AND status: "NEW"',
+        mode: 'advanced',
+        raw: 'level: "ERROR" AND status: "NEW"',
+        searchVersion: '1.0',
+      },
+      {
+        id: '2',
+        bookmark: false,
+        name: '',
+        createdTime: new Date(now.getTime() - 1000 * 60 * 30).toISOString(), // 30 mins ago
+        inputText: 'category: "technology"',
+        mode: 'advanced',
+        raw: 'category: "technology"',
+        searchVersion: '1.0',
+      },
+      {
+        id: '3',
+        bookmark: true,
+        name: 'My Daily Search',
+        createdTime: new Date(now.getTime() - 1000 * 60 * 60 * 24 * 2).toISOString(), // 2 days ago
+        inputText: 'author: "john_doe"',
+        mode: 'advanced',
+        raw: 'author: "john_doe"',
+        searchVersion: '1.0',
+      },
+      {
+        id: '4',
+        bookmark: false,
+        name: '',
+        createdTime: new Date(now.getTime() - 1000 * 60 * 5).toISOString(), // 5 mins ago
+        inputText: 'system crash',
+        mode: 'basic',
+        raw: 'message.content:"system crash"',
+        searchVersion: '1.0',
+      },
+    ];
+  }
+
+  private async delay(ms = 300) {
+    await new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  async getSearchHistory(offset = 0, pageSize = 20): Promise<SearchHistoryItem[]> {
+    await this.delay();
+    // Return only non-bookmarked items for recent history? Or all items sorted by time.
+    // Usually recent history shows all recent searches.
+    const sorted = [...this.items].sort((a, b) => new Date(b.createdTime).getTime() - new Date(a.createdTime).getTime());
+    return sorted.slice(offset, offset + pageSize);
+  }
+
+  async addSearchHistory(entry: { raw: string; mode: string; inputText: string }): Promise<void> {
+    await this.delay(100);
+    // Don't add if it's the exact same as the most recent one
+    const sorted = [...this.items].sort((a, b) => new Date(b.createdTime).getTime() - new Date(a.createdTime).getTime());
+    if (sorted.length > 0 && sorted[0].raw === entry.raw) {
+      return;
+    }
+
+    const newItem: SearchHistoryItem = {
+      id: Math.random().toString(36).substring(2, 9),
+      bookmark: false,
+      name: '',
+      createdTime: new Date().toISOString(),
+      inputText: entry.inputText,
+      mode: entry.mode,
+      raw: entry.raw,
+      searchVersion: '1.0',
+    };
+    this.items.push(newItem);
+  }
+
+  async getSearchHistoryBookmarks(): Promise<SearchHistoryItem[]> {
+    await this.delay();
+    return this.items
+      .filter((item) => item.bookmark)
+      .sort((a, b) => new Date(b.createdTime).getTime() - new Date(a.createdTime).getTime());
+  }
+
+  async toggleBookmark(id: string, name?: string): Promise<void> {
+    await this.delay(100);
+    const item = this.items.find((i) => i.id === id);
+    if (item) {
+      item.bookmark = !item.bookmark;
+      if (item.bookmark && name) {
+        item.name = name;
+      } else if (!item.bookmark) {
+        item.name = '';
+      }
+    }
+  }
+
+  async clearHistory(): Promise<void> {
+    await this.delay();
+    // Remove all non-bookmarked items
+    this.items = this.items.filter((item) => item.bookmark);
+  }
+
+  async deleteHistory(id: string): Promise<void> {
+    await this.delay(100);
+    this.items = this.items.filter((item) => item.id !== id);
+  }
+}
+

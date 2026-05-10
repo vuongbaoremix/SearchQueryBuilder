@@ -82,7 +82,7 @@ export const SearchQueryBuilder: React.FC<SearchQueryBuilderProps> = ({
   const [basicResult, setBasicResult] = useState<QueryResult | null>(null);
 
   // ---- History ----
-  const history = useSearchHistory(historyProvider, historyDisplay);
+  const history = useSearchHistory(historyProvider);
 
   // Mutual exclusion: close history when autocomplete opens (handled by input focus)
   const handleToggleHistory = useCallback(() => {
@@ -275,6 +275,8 @@ export const SearchQueryBuilder: React.FC<SearchQueryBuilderProps> = ({
           hasHistoryProvider={!!historyProvider}
           isHistoryOpen={history.isOpen}
           onToggleHistory={handleToggleHistory}
+          onOpenHistory={history.open}
+          onCloseHistory={history.close}
           historyPanel={historyPanelNode}
           historyDisplay={historyDisplay}
         />
@@ -295,6 +297,8 @@ export const SearchQueryBuilder: React.FC<SearchQueryBuilderProps> = ({
           hasHistoryProvider={!!historyProvider}
           isHistoryOpen={history.isOpen}
           onToggleHistory={handleToggleHistory}
+          onOpenHistory={history.open}
+          onCloseHistory={history.close}
           historyPanel={historyPanelNode}
           historyDisplay={historyDisplay}
         />
@@ -303,9 +307,6 @@ export const SearchQueryBuilder: React.FC<SearchQueryBuilderProps> = ({
       {showPreview && isPreviewOpen && previewResult && (previewResult.raw || hasQuery) && (
         <DSLPreview result={previewResult} />
       )}
-
-      {/* Inline history panel — rendered outside input, always visible */}
-      {historyDisplay === 'inline' && historyPanelNode}
     </div>
   );
 };

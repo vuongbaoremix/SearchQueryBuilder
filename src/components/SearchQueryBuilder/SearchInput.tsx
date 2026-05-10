@@ -30,6 +30,8 @@ interface SearchInputProps {
   hasHistoryProvider?: boolean;
   isHistoryOpen?: boolean;
   onToggleHistory?: () => void;
+  onOpenHistory?: () => void;
+  onCloseHistory?: () => void;
   historyPanel?: React.ReactNode;
   historyDisplay?: HistoryDisplayMode;
 }
@@ -57,6 +59,8 @@ export const SearchInput: React.FC<SearchInputProps> = ({
   hasHistoryProvider = false,
   isHistoryOpen = false,
   onToggleHistory,
+  onOpenHistory,
+  onCloseHistory,
   historyPanel,
   historyDisplay = 'popup',
 }) => {
@@ -285,10 +289,17 @@ export const SearchInput: React.FC<SearchInputProps> = ({
       // This must fire for BOTH normal input and inline edit inputs.
       setFocusTick((t) => t + 1);
     }
+    if (historyDisplay === 'inline' && onOpenHistory) {
+      onOpenHistory();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoOpenSuggestions]);
+  }, [autoOpenSuggestions, historyDisplay, onOpenHistory]);
 
-  const handleBlur = useCallback(() => {
+  const handleBlur = useCallback((e: React.FocusEvent) => {
+    if (e.currentTarget.contains(e.relatedTarget as Node)) {
+      return;
+    }
+
     isFocusedRef.current = false;
     // Delay close so clicks on popover items or tag parts can fire first.
     // The timeout is tracked so handleFocus can cancel it if focus moves
@@ -296,8 +307,11 @@ export const SearchInput: React.FC<SearchInputProps> = ({
     blurTimeoutRef.current = setTimeout(() => {
       blurTimeoutRef.current = null;
       autocomplete.close();
+      if (historyDisplay === 'inline' && onCloseHistory) {
+        onCloseHistory();
+      }
     }, 200);
-  }, [autocomplete]);
+  }, [autocomplete, historyDisplay, onCloseHistory]);
 
   const handleWrapperClick = useCallback(
     (e: React.MouseEvent) => {
@@ -431,7 +445,6 @@ export const SearchInput: React.FC<SearchInputProps> = ({
               onChange={handleChange}
               onKeyDown={handleSharedKeyDown}
               onFocus={handleFocus}
-              onBlur={handleBlur}
               autoComplete="off"
               spellCheck={false}
               style={{ width: `${Math.max(state.inputText.length, 3) * 8 + 12}px` }}
@@ -550,7 +563,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
     : placeholder || 'Start typing a field name…';
 
   return (
-    <div className={styles.inputWrapper} ref={wrapperRef}>
+    <div className={styles.inputWrapper} ref={wrapperRef} onBlur={handleBlur}>
       <div className={styles.inputContainer} onClick={handleWrapperClick}>
         {/* Mode selector */}
         {searchModes && searchModes.length >= 2 && activeMode && onModeChange && (
@@ -600,7 +613,6 @@ export const SearchInput: React.FC<SearchInputProps> = ({
                 onChange={handleChange}
                 onKeyDown={handleSharedKeyDown}
                 onFocus={handleFocus}
-                onBlur={handleBlur}
                 placeholder={currentPlaceholder}
                 autoComplete="off"
                 spellCheck={false}
@@ -669,16 +681,24 @@ export const SearchInput: React.FC<SearchInputProps> = ({
         </button>
       </div>
 
-      {/* Autocomplete popover */}
-      <AutocompletePopover
-        suggestions={autocomplete.suggestions}
-        selectedIndex={autocomplete.selectedIndex}
-        isLoading={autocomplete.isLoading}
-        phase={state.inputPhase}
-        isOpen={autocomplete.isOpen}
-        onSelect={handleSuggestionSelect}
-        onHover={autocomplete.setSelectedIndex}
-      />
+      {/* Dropdown container for stacking popovers */}
+      {(autocomplete.isOpen || (historyDisplay === 'inline' && isHistoryOpen)) && (
+        <div className={styles.dropdownContainer}>
+          {/* Autocomplete popover */}
+          <AutocompletePopover
+            suggestions={autocomplete.suggestions}
+            selectedIndex={autocomplete.selectedIndex}
+            isLoading={autocomplete.isLoading}
+            phase={state.inputPhase}
+            isOpen={autocomplete.isOpen}
+            onSelect={handleSuggestionSelect}
+            onHover={autocomplete.setSelectedIndex}
+          />
+
+          {/* History panel (inline mode) */}
+          {historyDisplay === 'inline' && historyPanel}
+        </div>
+      )}
 
       {/* History panel (passed from parent) — popup mode only */}
       {historyDisplay !== 'inline' && historyPanel}

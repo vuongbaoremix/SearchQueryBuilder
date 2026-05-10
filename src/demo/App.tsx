@@ -6,8 +6,12 @@ import React, { useState, useCallback } from 'react';
 import { SearchQueryBuilder } from '../components/SearchQueryBuilder/SearchQueryBuilder';
 import { sampleKeyConfigs } from './sampleConfig';
 import { realKeyConfigs } from './sampleConfig2';
+import { MockHistoryProvider } from './mockApi';
 import type { QueryResult, SearchMode } from '../core/types';
 import styles from './App.module.css';
+
+// Initialize mock history provider outside component so it persists across renders
+const mockHistoryProvider = new MockHistoryProvider();
 
 // ---- Search Mode configs ----
 const SearchIcon = () => (
@@ -96,6 +100,8 @@ export const App: React.FC = () => {
             autoOpenSuggestions={true}
             searchModes={SEARCH_MODES}
             defaultSearchMode="advanced"
+            historyProvider={mockHistoryProvider}
+            historyDisplay="inline"
             onSearchModeChange={(mode) => console.log('Mode changed:', mode.key)}
           />
         </section>

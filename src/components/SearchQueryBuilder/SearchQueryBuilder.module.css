@@ -494,12 +494,18 @@
    Autocomplete Popover
    ============================================================ */
 
-.popover {
+.dropdownContainer {
   position: absolute;
   top: calc(100% + 6px);
   left: 0;
   right: 0;
   z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.popover {
   background: var(--sqb-popover-bg);
   border: 1px solid var(--sqb-border);
   border-radius: var(--sqb-radius-lg);
@@ -1383,12 +1389,10 @@
 /* ---- Panel container — inline mode ---- */
 
 .historyPanelInline {
-  position: relative;
-  margin-top: 8px;
   background: var(--sqb-popover-bg);
   border: 1px solid var(--sqb-border);
   border-radius: var(--sqb-radius-lg);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--sqb-popover-shadow);
   display: flex;
   flex-direction: column;
   max-height: 350px;
